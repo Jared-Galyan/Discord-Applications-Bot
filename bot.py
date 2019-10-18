@@ -84,4 +84,4 @@ async def load(ctx, *, msg):
     else:
         await ctx.send('Loaded module: `{}.py`'.format(msg))
 
-bot.run('NjM0NTY0Njg5NzExNDY0NDUw.XakZTg.dgwwcPQqqGBYDgK_kPbMwJsrbQY')
+bot.run('TOKEN')
