@@ -17,7 +17,8 @@ bot = commands.Bot(command_prefix='?', case_insensitive=True)
 bot.remove_command('debug')
 bot.remove_command('help')
 
-initial_extensions = ['cogs.applications']
+initial_extensions = ['cogs.applications',
+                      'cogs.apply']
 
 if __name__ == '__main__':
     for extension in initial_extensions:
@@ -84,4 +85,4 @@ async def load(ctx, *, msg):
     else:
         await ctx.send('Loaded module: `{}.py`'.format(msg))
 
-bot.run('TOKEN')
+bot.run('NjM0NTY0Njg5NzExNDY0NDUw.Xan2UQ.bbdPPtMHe8twI7w6Vtwaqe13eRs')
