@@ -38,13 +38,15 @@ class Apply(commands.Cog):
         cursor.execute(f"SELECT name, questions, intro FROM applications WHERE guild_id = '{ctx.message.guild.id}'")
         result = cursor.fetchall()
         head, sep, tail = str(result[int(num.content) - 1]).strip('(,)').partition(',')
-        await ctx.send(head.strip("'"))
         numm = head.strip("'")
-        cursor.execute(f"SELECT questions FROM applications WHERE guild_id = '{ctx.message.guild.id}' and name = '{numm}'")
+        cursor.execute(f"SELECT questions, intro FROM applications WHERE guild_id = '{ctx.message.guild.id}' and name = '{numm}'")
         result = cursor.fetchone()
-        await ctx.send('Questions testing')
+        msgg = await ctx.send(f'**Applying for: {numm}**\n{result[1]}')
         for item in list(str(result[0].strip("[,],'")).split(",")):
-            await ctx.send(item.replace("'", ""))
+            question = item.replace("'", "")
+            await msgg.edit(content=f'{msgg.content}\n\n**{question}**')
+            answer = await self.bot.wait_for('message', check=check)
+            await msgg.edit(content=f'{msgg.content}\n`{answer.content}`')
         
 
 
