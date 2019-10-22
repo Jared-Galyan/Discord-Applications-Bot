@@ -10,6 +10,7 @@ import sqlite3
 import os
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+import datetime
 from .utils import checks
 
 class Apply(commands.Cog):
@@ -47,7 +48,25 @@ class Apply(commands.Cog):
             await msgg.edit(content=f'{msgg.content}\n\n**{question}**')
             answer = await self.bot.wait_for('message', check=check)
             await msgg.edit(content=f'{msgg.content}\n`{answer.content}`')
-        
+        await ctx.send(msgg.content)
+        confirm = await ctx.send(f'**Please react with ✅ to submit. React with anything else to cancel.**')
+        def check1(reaction, user):
+            return user == ctx.message.author and str(reaction.emoji) == '✅' and reaction.message.id == confirm.id
+
+        try:
+            await self.bot.wait_for('reaction_add', timeout=60.0, check=check1)
+        except:
+            await ctx.send('**Application Cancelled.**')
+        else:
+            sql = ("INSERT INTO submits(guild_id, user_id, answers, app, timestamp) VALUES(?,?,?,?,?)")
+            val = (str(ctx.guild.id), str(ctx.message.author.id), str(msgg.content).replace(f'**Applying for: {numm}**\n{result[1]}\n\n', ''), numm, str(datetime.datetime.utcnow()))
+            cursor.execute(sql, val)
+            db.commit()
+            await ctx.send("Application Submitted")
+            chan = ctx.guild.get_channel(636320967744028702)
+            await chan.send(f'**An application for** `{numm}` **has been submitted by** `{ctx.message.author} ({ctx.message.author.id})`')
+        cursor.close()
+        db.close()
 
 
 def setup(bot):
