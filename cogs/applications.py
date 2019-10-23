@@ -64,8 +64,11 @@ class Applications(commands.Cog):
             for question in questions:
                 ques += f'**{question}**\n`(example answer)`\n' 
 
-            conf = f"""**Application for: {name.content}**\n{intro.content}\n{ques}\n\n**If everything looks correct please react with** ✅"""
-            confirm = await ctx.send(conf)
+            conf = f"""**Application for: {name.content}**\n{intro.content}\n{ques}"""
+            await ctx.send(conf)
+            confirm = await ctx.send('**Please react with ✅ to confirm you want to create this application.**')
+        
+            await confirm.add_reaction('✅')
             
             def check1(reaction, user):
                 return user == ctx.message.author and str(reaction.emoji) == '✅' and reaction.message.id == confirm.id
@@ -79,12 +82,67 @@ class Applications(commands.Cog):
                 val = (str(ctx.guild.id), name.content, str(questions), intro.content)
                 cursor.execute(sql, val)
                 db.commit()
-                cursor.close()
-                db.close()
                 await ctx.send('Application Created')
+            cursor.close()
+            db.close()
         else:
             await ctx.send('**An application already exists with that name.**')
+            cursor.close()
+            db.close()
                 
+    @applications.command()
+    @checks.is_admin()
+    async def remove(self, ctx):
+        db = sqlite3.connect('main.db')
+        cursor = db.cursor()
+        cursor.execute(f"SELECT name FROM applications WHERE guild_id = '{ctx.message.guild.id}'")
+        result = cursor.fetchall()
+        apps = ''
+        for result in result:
+            apps += f'> {result[0]}\n'
+        first = f"""**Please insert the name of the application. (Case Sensitive)**
+        {apps}
+        """
+        def check(m):
+            return m.author == ctx.message.author and m.channel == ctx.message.channel
+        await ctx.send(first)
+        name = await self.bot.wait_for('message', check=check)
+        confirm = await ctx.send('**Please react with ✅ to confirm you want to remove this application.** (This will not remove already submitted applications from users)')
+        
+        await confirm.add_reaction('✅')
+        def check1(reaction, user):
+            return user == ctx.message.author and str(reaction.emoji) == '✅' and reaction.message.id == confirm.id
+
+        try:
+            await self.bot.wait_for('reaction_add', timeout=60.0, check=check1)
+        except:
+            await ctx.send('**Action Cancelled.**')
+        else:
+            if name.content in apps:
+                cursor.execute(f"DELETE FROM applications WHERE guild_id = '{str(ctx.guild.id)}' and name = '{name.content}'")
+                db.commit()
+                await ctx.send('Application removed')
+            else:
+                await ctx.send('There are no applications by that name.')
+        cursor.close()
+        db.close()
+
+    @applications.command(name='list')
+    @checks.is_admin()
+    async def _list(self, ctx):
+        db = sqlite3.connect('main.db')
+        cursor = db.cursor()
+        cursor.execute(f"SELECT name FROM applications WHERE guild_id = '{ctx.message.guild.id}'")
+        result = cursor.fetchall()
+        apps = ''
+        for result in result:
+            apps += f'> {result[0]}\n'
+        first = f"""**Here is a list of all current applciations.**
+        {apps}
+        """
+        await ctx.send(first)
+        cursor.close()
+        db.close()
 
 def setup(bot):
     bot.add_cog(Applications(bot))
