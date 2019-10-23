@@ -64,8 +64,15 @@ class Apply(commands.Cog):
             cursor.execute(sql, val)
             db.commit()
             await ctx.send("Application Submitted")
-            chan = ctx.guild.get_channel(636320967744028702)
-            await chan.send(f'**An application for** `{numm}` **has been submitted by** `{ctx.message.author} ({ctx.message.author.id})`')
+            cursor.execute(f"SELECT submit FROM settings WHERE guild_id = '{ctx.message.guild.id}'")
+            result2 = cursor.fetchone()
+            if result is None:
+                return
+            elif str(result[0]).lower() == 'none':
+                return
+            else:
+                chan = ctx.guild.get_channel(int(result2[0]))
+                await chan.send(f'**An application for** `{numm}` **has been submitted by** `{ctx.message.author} ({ctx.message.author.id})`')
         cursor.close()
         db.close()
 
