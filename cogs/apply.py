@@ -50,6 +50,7 @@ class Apply(commands.Cog):
             await msgg.edit(content=f'{msgg.content}\n`{answer.content}`')
         await ctx.send(msgg.content)
         confirm = await ctx.send(f'**Please react with ✅ to submit. React with anything else to cancel.**')
+        await confirm.add_reaction('✅')
         def check1(reaction, user):
             return user == ctx.message.author and str(reaction.emoji) == '✅' and reaction.message.id == confirm.id
 
