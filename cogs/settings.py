@@ -19,7 +19,7 @@ class Settings(commands.Cog):
         self.bot = bot
 
     @commands.group(invoke_without_command=True)
-    @checks.is_admin()
+    @checks.has_review_role()
     async def settings(self, ctx):
         msg = """
         **Applications settings**
@@ -28,7 +28,7 @@ class Settings(commands.Cog):
         await ctx.send(msg)
 
     @settings.group(invoke_without_command=True)
-    @checks.is_admin()
+    @checks.has_review_role()
     async def submitted(self, ctx, channel:discord.TextChannel=None):
         if channel is None:
             await ctx.send('**Please mention a channel.**')
@@ -55,7 +55,7 @@ class Settings(commands.Cog):
                 await ctx.send(f"**You'll now get notifications in** {channel.mention} **when someone submits an application.**")
     
     @submitted.command(name='none')
-    @checks.is_admin()
+    @checks.has_review_role()
     async def _none(self, ctx):
         db = sqlite3.connect('main.db')
         cursor = db.cursor()
@@ -77,6 +77,57 @@ class Settings(commands.Cog):
             cursor.close()
             db.close()
             await ctx.send(f"**You'll no longer get notifications when someone submits an application.**")
+
+    @settings.group(invoke_without_command=True)
+    @checks.has_review_role()
+    async def role(self, ctx, role:discord.Role=None):
+        if role is None:
+            await ctx.send('**Please mention a role.**')
+        else:
+            db = sqlite3.connect('main.db')
+            cursor = db.cursor()
+            cursor.execute(f"SELECT review_role, guild_id FROM settings WHERE guild_id = '{ctx.message.guild.id}'")
+            result = cursor.fetchone()
+            if result is None:
+                sql = ("INSERT INTO settings(guild_id, review_role) VALUES(?,?)")
+                val = (str(ctx.guild.id), str(role.id))
+                cursor.execute(sql, val)
+                db.commit()
+                cursor.close()
+                db.close()
+                await ctx.send(f"**The role** `{role.name}` **now has permissions for reviewing, applications, and settings.**")
+            else:
+                sql = ("UPDATE settings SET review_role = ? WHERE guild_id = ?")
+                val = (str(role.id), str(ctx.guild.id))
+                cursor.execute(sql, val)
+                db.commit()
+                cursor.close()
+                db.close()
+                await ctx.send(f"**The role** `{role.name}` **now has permissions for reviewing, applications, and settings.**")
+
+    @role.command(name='none')
+    @checks.has_review_role()
+    async def __none(self, ctx):
+        db = sqlite3.connect('main.db')
+        cursor = db.cursor()
+        cursor.execute(f"SELECT review_role, guild_id FROM settings WHERE guild_id = '{ctx.message.guild.id}'")
+        result = cursor.fetchone()
+        if result is None:
+            sql = ("INSERT INTO settings(guild_id, review_role) VALUES(?,?)")
+            val = (str(ctx.guild.id), 'none')
+            cursor.execute(sql, val)
+            db.commit()
+            cursor.close()
+            db.close()
+            await ctx.send(f"**Set admin role to none.**")
+        else:
+            sql = ("UPDATE settings SET review_role = ? WHERE guild_id = ?")
+            val = ('none', str(ctx.guild.id))
+            cursor.execute(sql, val)
+            db.commit()
+            cursor.close()
+            db.close()
+            await ctx.send(f"**Set admin role to none.**")
 
 def setup(bot):
     bot.add_cog(Settings(bot))

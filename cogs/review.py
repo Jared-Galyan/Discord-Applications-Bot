@@ -20,7 +20,7 @@ class Review(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    @checks.is_admin()
+    @checks.has_review_role()
     async def review(self, ctx):
         db = sqlite3.connect('main.db')
         cursor = db.cursor()

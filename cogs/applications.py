@@ -19,7 +19,7 @@ class Applications(commands.Cog):
         self.bot = bot
 
     @commands.group(invoke_without_command=True)
-    @checks.is_admin()
+    @checks.has_review_role()
     async def applications(self, ctx):
         msg = """
         **Applications commands**
@@ -30,7 +30,7 @@ class Applications(commands.Cog):
         await ctx.send(msg)
 
     @applications.command()
-    @checks.is_admin()
+    @checks.has_review_role()
     async def create(self, ctx):
         first = """**Please insert the name for the application.**
         > Ex: Moderator
@@ -91,7 +91,7 @@ class Applications(commands.Cog):
             db.close()
                 
     @applications.command()
-    @checks.is_admin()
+    @checks.has_review_role()
     async def remove(self, ctx):
         db = sqlite3.connect('main.db')
         cursor = db.cursor()
@@ -128,7 +128,7 @@ class Applications(commands.Cog):
         db.close()
 
     @applications.command(name='list')
-    @checks.is_admin()
+    @checks.has_review_role()
     async def _list(self, ctx):
         db = sqlite3.connect('main.db')
         cursor = db.cursor()

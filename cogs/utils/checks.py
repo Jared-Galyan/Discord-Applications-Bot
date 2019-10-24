@@ -74,3 +74,19 @@ def is_supporter():
         return sup in ctx.author.roles or supit in ctx.author.roles or hr in ctx.author.roles or await check_guild_permissions(ctx, {'administrator': True})
     return commands.check(predicate)
 
+def has_review_role():
+    async def predicate(ctx):
+        db = sqlite3.connect('main.db')
+        cursor = db.cursor()
+        cursor.execute("SELECT review_role FROM settings WHERE guild_id = '{}'".format(ctx.guild.id))
+        result = cursor.fetchone()
+        if result is None:
+            return await check_guild_permissions(ctx, {'administrator': True})
+        elif result[0] == 'none':
+            return await check_guild_permissions(ctx, {'administrator': True})
+        else:
+            role = discord.utils.get(ctx.guild.roles, id=result[0])
+
+            return role in ctx.author.roles or await check_guild_permissions(ctx, {'administrator': True})
+    return commands.check(predicate)
+
