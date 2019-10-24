@@ -23,7 +23,9 @@ class Settings(commands.Cog):
     async def settings(self, ctx):
         msg = """
         **Applications settings**
-        > ?settings submitted `<#channel_to_show_submitted apps>`
+        > ?settings submitted `[<#channel_to_show_submitted apps>, none]`
+        > ?settings role `[<@role>, none]`
+        > ?settings dming `[true, false]`
         """
         await ctx.send(msg)
 
@@ -128,6 +130,53 @@ class Settings(commands.Cog):
             cursor.close()
             db.close()
             await ctx.send(f"**Set admin role to none.**")
+
+    @settings.group(invoke_without_command=True)
+    @checks.has_review_role()
+    async def dming(self, ctx, dming=None):
+        if dming is None:
+            await ctx.send('**Please insert true or false with the command.**')
+        else:
+            db = sqlite3.connect('main.db')
+            cursor = db.cursor()
+            cursor.execute(f"SELECT dming, guild_id FROM settings WHERE guild_id = '{ctx.message.guild.id}'")
+            result = cursor.fetchone()
+            if dming.lower() == 'true':
+                if result is None:
+                    sql = ("INSERT INTO settings(guild_id, dming) VALUES(?,?)")
+                    val = (str(ctx.guild.id), 'true')
+                    cursor.execute(sql, val)
+                    db.commit()
+                    cursor.close()
+                    db.close()
+                    await ctx.send(f"**DM applying has now been enabled.**")
+                else:
+                    sql = ("UPDATE settings SET dming = ? WHERE guild_id = ?")
+                    val = ('true', str(ctx.guild.id))
+                    cursor.execute(sql, val)
+                    db.commit()
+                    cursor.close()
+                    db.close()
+                    await ctx.send(f"**DM applying has now been enabled**")
+            elif dming.lower() == 'false':
+                if result is None:
+                    sql = ("INSERT INTO settings(guild_id, dming) VALUES(?,?)")
+                    val = (str(ctx.guild.id), 'none')
+                    cursor.execute(sql, val)
+                    db.commit()
+                    cursor.close()
+                    db.close()
+                    await ctx.send(f"**DM applying has now been disabled**")
+                else:
+                    sql = ("UPDATE settings SET dming = ? WHERE guild_id = ?")
+                    val = ('none', str(ctx.guild.id))
+                    cursor.execute(sql, val)
+                    db.commit()
+                    cursor.close()
+                    db.close()
+                    await ctx.send(f"**DM applying has now been disabled**")
+            else:
+                await ctx.send("**Please insert true or false with the command.**")
 
 def setup(bot):
     bot.add_cog(Settings(bot))
